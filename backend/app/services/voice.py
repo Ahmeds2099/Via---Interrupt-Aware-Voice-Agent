@@ -1,0 +1,2 @@
+class VoiceService:
+    pass
