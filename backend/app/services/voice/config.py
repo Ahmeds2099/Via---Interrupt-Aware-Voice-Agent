@@ -1,0 +1,13 @@
+class VoiceConfig:
+
+    SAMPLE_RATE = 16000
+
+    CHANNELS = 1
+
+    CHUNK_SIZE = 1024
+
+    MAX_SILENCE_MS = 800
+
+    ENABLE_INTERRUPTION = True
+
+    ENABLE_STREAMING = True

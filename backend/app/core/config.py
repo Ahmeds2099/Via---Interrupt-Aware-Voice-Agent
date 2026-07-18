@@ -28,5 +28,22 @@ class Settings:
 
     HUME_API_KEY = os.getenv("HUME_API_KEY", "")
 
+    CARTESIA_API_KEY = os.getenv("CARTESIA_API_KEY", "")
+
+    CARTESIA_VOICE_ID = os.getenv("CARTESIA_VOICE_ID", "")
+
+    VOICE_SAMPLE_RATE: int = 16000
+
+    VOICE_CHUNK_SIZE: int = 1024
+
+    VOICE_ENABLE_STREAMING: bool = True
+
+    VOICE_ENABLE_INTERRUPTION: bool = True
+
+    WHISPER_MODEL: str = "base"
+
+    WHISPER_DEVICE: str = "cpu"
+
+    WHISPER_COMPUTE_TYPE: str = "int8"
 
 settings = Settings()

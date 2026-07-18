@@ -1,37 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getSystemStatus } from "@/lib/api";
+import ConnectionStatus from "@/components/voice/connectionstatus";
+import VoiceButton from "@/components/voice/voicebutton";
+import { useVoice } from "@/hooks/usevoice";
 
-export default function Home() {
-  const [status, setStatus] = useState("Connecting...");
+export default function HomePage() {
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const data = await getSystemStatus();
-        setStatus(data.status);
-      } catch {
-        setStatus("Backend Offline");
-      }
-    }
+  const {
 
-    load();
-  }, []);
+    connected,
+
+    connecting,
+
+    listening,
+
+    connect,
+
+    disconnect,
+
+    startListening,
+
+    stopListening,
+
+  } = useVoice();
 
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <div className="space-y-4 text-center">
-        <h1 className="text-5xl font-bold">Via</h1>
 
-        <p>Adaptive Universal Resilient Agent</p>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8">
 
-        <div className="rounded-lg border p-4">
-          <p>Backend Status</p>
+      <h1 className="text-4xl font-bold">
 
-          <p className="font-semibold">{status}</p>
-        </div>
-      </div>
+        Via
+
+      </h1>
+
+      <ConnectionStatus
+
+        connected={connected}
+
+        connecting={connecting}
+
+      />
+
+      <VoiceButton
+
+        connected={connected}
+
+        listening={listening}
+
+        connect={connect}
+
+        disconnect={disconnect}
+
+        startListening={startListening}
+
+        stopListening={stopListening}
+
+      />
+
     </main>
+
   );
+
 }
