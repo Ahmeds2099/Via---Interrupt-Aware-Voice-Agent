@@ -27,9 +27,11 @@ export class VoiceRecorder {
 
         this.context = new AudioContext();
 
+        const sampleRate = this.context.sampleRate;
+
         console.log(
             "[VOICE] Sample Rate:",
-            this.context.sampleRate,
+            sampleRate,
         );
 
         this.source =
@@ -50,7 +52,15 @@ export class VoiceRecorder {
                 event.inputBuffer.getChannelData(0);
 
             const pcm =
-                PCMEncoder.float32ToInt16(samples);
+                PCMEncoder.encode(
+                    samples,
+                    sampleRate,
+                );
+
+            console.log(
+                "[VOICE] Resampled →",
+                PCMEncoder.TARGET_SAMPLE_RATE,
+            );
 
             this.callback?.(pcm);
         };

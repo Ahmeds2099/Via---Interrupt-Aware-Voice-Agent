@@ -8,7 +8,8 @@ from app.services.voice.session import VoiceSession
 
 class VoiceSTTPipeline:
     """
-    Connects the voice runtime with the existing STT provider.
+    Converts completed speech segments into
+    transcripts using the configured STT provider.
     """
 
     SAMPLE_RATE = 16000
@@ -22,9 +23,8 @@ class VoiceSTTPipeline:
     async def process(
         self,
         session: VoiceSession,
+        audio: bytes,
     ) -> str | None:
-
-        audio = session.audio_buffer.getvalue()
 
         if not audio:
             return None
@@ -45,14 +45,11 @@ class VoiceSTTPipeline:
                 wav.setnchannels(self.CHANNELS)
                 wav.setsampwidth(self.SAMPLE_WIDTH)
                 wav.setframerate(self.SAMPLE_RATE)
-
                 wav.writeframes(audio)
 
             transcript = self.provider.transcribe(
                 temp_path,
             )
-
-            session.audio_buffer.clear()
 
             return transcript
 

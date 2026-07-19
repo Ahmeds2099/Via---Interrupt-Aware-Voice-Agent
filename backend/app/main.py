@@ -1,6 +1,5 @@
 from fastapi.middleware.cors import CORSMiddleware
 from app.middleware.exception import generic_exception_handler
-from app.api import system
 from fastapi import FastAPI
 from app.api.upload import router as upload_router
 from app.api.search import router as search_router

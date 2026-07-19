@@ -2,19 +2,43 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import uuid4
 
+from app.services.conversation.conversation_state import ConversationState
+from app.services.conversation.response_controller import ResponseController
 from app.services.voice.audio_buffer import AudioBuffer
 from app.services.voice.state import VoiceState
+from app.services.voice.vad import VoiceActivityDetector
 
 
 @dataclass
 class VoiceSession:
 
-    audio_buffer: AudioBuffer = field(default_factory=AudioBuffer)
-    session_id: str = field(default_factory=lambda: str(uuid4()))
+    controller: ResponseController = field(
+    default_factory=ResponseController
+)
 
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    conversation_state: ConversationState = field(
+    default_factory=ConversationState
+)
 
-    last_activity: datetime = field(default_factory=datetime.utcnow)
+    audio_buffer: AudioBuffer = field(
+        default_factory=AudioBuffer
+    )
+
+    vad: VoiceActivityDetector = field(
+        default_factory=VoiceActivityDetector
+    )
+
+    session_id: str = field(
+        default_factory=lambda: str(uuid4())
+    )
+
+    created_at: datetime = field(
+        default_factory=datetime.utcnow
+    )
+
+    last_activity: datetime = field(
+        default_factory=datetime.utcnow
+    )
 
     state: VoiceState = VoiceState.IDLE
 

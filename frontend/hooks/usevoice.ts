@@ -6,15 +6,26 @@ import { VoiceRecorder } from "@/lib/voice/recorder";
 
 export function useVoice() {
 
+    const audioContextRef = useRef<AudioContext | null>(null);
+
     const socketRef = useRef<VoiceSocket | null>(null);
 
     const recorderRef = useRef<VoiceRecorder | null>(null);
+
+    // Playback scheduler
+    const nextPlaybackTimeRef = useRef(0);
 
     const [connected, setConnected] = useState(false);
 
     const [connecting, setConnecting] = useState(false);
 
     const [listening, setListening] = useState(false);
+
+    const [transcript, setTranscript] =
+        useState("");
+
+    const [assistantResponse, setAssistantResponse] =
+        useState("");
 
     const connect = useCallback(() => {
 
@@ -44,6 +55,8 @@ export function useVoice() {
 
             socketRef.current = null;
 
+            nextPlaybackTimeRef.current = 0;
+
         };
 
         socket.onError = () => {
@@ -51,6 +64,85 @@ export function useVoice() {
             setConnecting(false);
 
             setConnected(false);
+
+        };
+
+        socket.onTranscript = (text) => {
+
+            setTranscript(text);
+
+        };
+
+        socket.onAssistantStreamStart = () => {
+
+            setAssistantResponse("");
+
+        };
+
+        socket.onAssistantStream = (token) => {
+
+            setAssistantResponse((previous) =>
+
+                previous + token
+
+            );
+
+        };
+
+        socket.onAssistantAudio = async (pcm) => {
+
+            if (!audioContextRef.current) {
+
+                audioContextRef.current = new AudioContext();
+
+                console.log(
+                    "[AUDIO] Context sample rate:",
+                    audioContextRef.current.sampleRate,
+                );
+
+                nextPlaybackTimeRef.current =
+                    audioContextRef.current.currentTime;
+            }
+
+            const ctx = audioContextRef.current;
+
+            const float32 = new Float32Array(pcm);
+
+            const buffer = ctx.createBuffer(
+                1,
+                float32.length,
+                16000,
+            );
+
+            buffer.copyToChannel(
+                float32,
+                0,
+            );
+
+            const source =
+                ctx.createBufferSource();
+
+            source.buffer = buffer;
+
+            source.connect(
+                ctx.destination,
+            );
+
+            const startTime = Math.max(
+                nextPlaybackTimeRef.current,
+                ctx.currentTime,
+            );
+
+            source.start(startTime);
+
+            nextPlaybackTimeRef.current =
+                startTime + buffer.duration;
+
+        };
+
+        socket.onAssistantStreamEnd = () => {
+
+            console.log("[VOICE] Stream complete");
 
         };
 
@@ -71,6 +163,12 @@ export function useVoice() {
         recorderRef.current = null;
 
         socketRef.current?.disconnect();
+
+        audioContextRef.current?.close();
+
+        audioContextRef.current = null;
+
+        nextPlaybackTimeRef.current = 0;
 
     }, []);
 
@@ -115,6 +213,8 @@ export function useVoice() {
 
             socketRef.current?.disconnect();
 
+            audioContextRef.current?.close();
+
         };
 
     }, []);
@@ -126,6 +226,10 @@ export function useVoice() {
         connecting,
 
         listening,
+
+        transcript,
+
+        assistantResponse,
 
         connect,
 

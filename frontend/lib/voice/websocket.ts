@@ -32,11 +32,68 @@ export class VoiceSocket {
             this.onOpen?.();
         };
 
+
         this.socket.onmessage = (event) => {
 
-            this.onMessage?.(event.data);
-        };
+            if (event.data instanceof ArrayBuffer) {
 
+                this.onAssistantAudio?.(
+                    event.data,
+                );
+
+                return;
+
+            }
+
+            const message = JSON.parse(
+                event.data,
+            );
+
+            switch (message.type) {
+
+                case "transcript":
+
+                    this.onTranscript?.(
+                        message.text,
+                    );
+
+                    break;
+
+                case "assistant_response":
+
+                    this.onAssistantResponse?.(
+                        message.text,
+                    );
+
+                    break;
+
+                case "assistant_stream_start":
+
+                    this.onAssistantStreamStart?.();
+
+                    break;
+
+                case "assistant_stream":
+
+                    this.onAssistantStream?.(
+                        message.token,
+                    );
+
+                    break;
+
+                case "assistant_stream_end":
+
+                    this.onAssistantStreamEnd?.();
+
+                    break;
+
+                default:
+
+                    this.onMessage?.(message);
+
+            }
+
+        };
         this.socket.onerror = (event) => {
 
             console.error("[VOICE]", event);
@@ -84,4 +141,17 @@ export class VoiceSocket {
 
         this.socket?.send(buffer);
     }
+
+    onTranscript?: (text: string) => void;
+
+    onAssistantResponse?: (text: string) => void;
+
+    onAssistantStreamStart?: () => void;
+
+    onAssistantStream?: (token: string) => void;
+
+    onAssistantStreamEnd?: () => void;
+
+    onAssistantAudio?: (audio: ArrayBuffer) => void;
+
 }

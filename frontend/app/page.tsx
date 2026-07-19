@@ -14,6 +14,10 @@ export default function HomePage() {
 
     listening,
 
+    transcript,
+
+    assistantResponse,
+
     connect,
 
     disconnect,
@@ -33,6 +37,14 @@ export default function HomePage() {
         Via
 
       </h1>
+
+      <div>
+        <strong>You:</strong> {transcript}
+      </div>
+
+      <div>
+        <strong>Via:</strong> {assistantResponse}
+      </div>
 
       <ConnectionStatus
 

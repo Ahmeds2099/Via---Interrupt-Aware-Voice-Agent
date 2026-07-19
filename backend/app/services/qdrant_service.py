@@ -1,4 +1,3 @@
-
 from operator import index
 from uuid import uuid4
 
