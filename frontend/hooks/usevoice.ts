@@ -180,12 +180,29 @@ export function useVoice() {
         setVoiceError("");
         setConnecting(true);
         setVoiceState("connecting");
-        const backendReady = await checkSystem();
+        
+        let backendReady = false;
+        let attempts = 0;
+        const maxAttempts = 7;
+        
+        while (attempts < maxAttempts) {
+            backendReady = await checkSystem();
+            if (backendReady) break;
+            
+            attempts++;
+            if (attempts >= maxAttempts) break;
+            
+            setVoiceState("waking_up");
+            // Exponential backoff: 2s, 3s, 4.5s, 6.7s, 10s, 15s (cap)
+            const backoff = Math.min(2000 * Math.pow(1.5, attempts - 1), 15000);
+            await new Promise(resolve => setTimeout(resolve, backoff));
+        }
+
         if (!backendReady) {
             setConnecting(false);
             setVoiceState("error");
             setVoiceError(
-                `Unable to reach Via at ${apiBase}. Start the backend and try again.`,
+                `Unable to reach Via at ${apiBase}. It may still be starting up or currently unavailable.`,
             );
             return;
         }

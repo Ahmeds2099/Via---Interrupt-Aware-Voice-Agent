@@ -8,6 +8,10 @@ class WhisperProvider(BaseSTTProvider):
         model_size: str = "base",
     ):
 
+        from app.core.config import settings
+        if not settings.VOICE_ALLOW_WHISPER_FALLBACK:
+            raise RuntimeError("not available in this deployment")
+
         # Keep the import and model allocation off the normal Deepgram path.
         from faster_whisper import WhisperModel
 

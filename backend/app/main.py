@@ -8,6 +8,16 @@ from app.api.stt import router as stt_router
 from app.services.qdrant_service import QdrantService
 from app.core.config import settings
 from app.api.health import router as health_router
+from fastapi.middleware.cors import CORSMiddleware
+from app.middleware.exception import generic_exception_handler
+from fastapi import FastAPI
+from app.api.upload import router as upload_router
+from app.api.search import router as search_router
+from app.api.stt import router as stt_router
+
+from app.services.qdrant_service import QdrantService
+from app.core.config import settings
+from app.api.health import router as health_router
 from app.api.system import router as system_router
 from app.api.ask import router as ask_router
 from app.api.stream import router as stream_router
@@ -18,6 +28,17 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.VERSION,
 )
+
+@app.on_event("startup")
+async def startup_event():
+    try:
+        import psutil
+        import os
+        process = psutil.Process(os.getpid())
+        memory_mb = process.memory_info().rss / 1024 / 1024
+        print(f"[MEMORY] Startup Memory usage: {memory_mb:.2f} MB")
+    except ImportError:
+        print("[MEMORY] psutil not installed, skipping memory logging")
 
 try:
     QdrantService.initialize()

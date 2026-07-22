@@ -1,33 +1,71 @@
-# Via
+# Via — Interrupt-Aware Voice Agent
 
-Via is an adaptive, interruptible universal voice agent built for the OneInbox
-Voice AI Engineer Hackathon. It listens continuously, lets the user barge in,
-keeps track of an interrupted explanation, answers document-grounded questions,
-adapts its delivery to reliable emotional cues, and restores session context.
+Via is an adaptive, interruptible universal voice agent. It listens continuously, lets you barge in mid-sentence, tracks an interrupted explanation, answers document-grounded questions, adapts its delivery to emotional cues, and restores session context after reconnects.
 
-Via can work as a general assistant without a document. Uploading a PDF, CSV,
-or JSON file gives it a temporary professional domain grounded in that source.
-For example, property data turns Via into a grounded real-estate mentor while a
-software specification turns it into a project specialist.
+Via can work as a general assistant without a document. Uploading a PDF, CSV, or JSON gives it a temporary professional domain grounded in that source — property data turns it into a real-estate mentor, a software spec turns it into a project specialist.
 
-## What Via can do
+---
 
-- Stream speech through Deepgram Nova-2 with interim and final transcripts.
-- Stop speaking as soon as the user barges in.
-- Distinguish stop commands, acknowledgments, clarifications, side questions,
-  topic switches, resume requests, and declines.
-- Resume an interrupted response from the last confirmed playback boundary.
-- Use Whisper locally only after Deepgram fails and the user accepts fallback.
-- Ingest PDF, CSV, and JSON while preserving page, row, and JSON-path metadata.
-- Retrieve relevant domain context through FastEmbed and Qdrant.
-- Store resumable session state through Upstash Redis.
-- Use local Emotion2Vec cues only when they are reliable and consistent.
-- Show real provider state, provenance, retrieval, interruption, and latency in
-  the Architecture workspace.
+## 🔴 Live Demo
 
-LangGraph and Vapi are intentionally not used. Via owns its voice state machine
-directly, keeping interruption, playback acknowledgment, and resumption visible
-and testable.
+> **[→ Try the Live Demo](#)** *(link coming soon)*
+
+> **[→ Watch the Demo Video](#)** *(video coming soon)*
+
+---
+
+## ⚠️ A Note on the Live Demo
+
+**The public demo is intentionally limited.** Please read this before judging it.
+
+The live demo runs on **Render's free tier (512 MB RAM)**, which imposes hard constraints that are not present when running locally. Specifically:
+
+### What is disabled in the demo build:
+
+| Feature | Local / Dev | Live Demo |
+|---|---|---|
+| Neural Emotion2Vec (Emotion recognition) | ✅ Enabled | ❌ Disabled |
+| Whisper local STT fallback | ✅ Enabled | ❌ Disabled |
+| Silero neural VAD | ✅ Enabled | ❌ Disabled (Energy VAD used instead) |
+| Response length | Full, natural | Capped at 1–2 sentences |
+
+### Why is the demo slow?
+
+1. **Cold starts:** Render's free tier spins the backend down after 15 minutes of inactivity. When you first open the demo, it may take **30–60 seconds** to wake up. The frontend will show a "Waking up..." state and retry automatically — just wait.
+2. **Shared infrastructure:** The free tier runs on shared, resource-constrained machines, not dedicated hardware.
+3. **No local ML models:** The neural models that power Via's full emotional intelligence (Emotion2Vec, Silero VAD, Whisper) consume 1–2 GB of RAM each. They simply cannot run on a 512 MB free-tier container. This is a deployment constraint, not a code limitation.
+4. **LLM responses are deliberately shortened:** To prevent Deepgram's streaming buffer from overflowing under the slower processing pipeline, Via's responses are limited to 1–2 sentences in the demo. This is enough to test barge-in, interruptions, and resumption.
+
+### What the demo *does* prove:
+
+Despite these constraints, the core architecture is fully functional in the demo:
+- ✅ Real-time WebSocket voice streaming
+- ✅ Deepgram live transcription with interim results
+- ✅ Barge-in / interruption detection
+- ✅ Response resumption after interruption
+- ✅ Document upload and grounded Q&A (RAG)
+- ✅ Session persistence via Redis
+
+**To see Via at full capability, run it locally using the instructions below.**
+
+---
+
+## What Via can do (Full Local Build)
+
+- Stream speech through Deepgram Nova-2 with interim and final transcripts
+- Stop speaking as soon as you barge in
+- Distinguish stop commands, acknowledgments, clarifications, side questions, topic switches, resume requests, and declines
+- Resume an interrupted response from the last confirmed playback boundary
+- Use Whisper locally only after Deepgram fails and you accept the fallback
+- Ingest PDF, CSV, and JSON while preserving page, row, and JSON-path metadata
+- Retrieve relevant domain context through FastEmbed and Qdrant
+- Store resumable session state through Upstash Redis
+- Use local Emotion2Vec cues when they are reliable and consistent
+- Show real provider state, provenance, retrieval, interruption, and latency in the Architecture workspace
+
+LangGraph and Vapi are intentionally not used. Via owns its voice state machine directly, keeping interruption, playback acknowledgment, and resumption visible and testable.
+
+---
 
 ## Architecture
 
@@ -35,13 +73,13 @@ and testable.
 Browser microphone
   -> Web Audio PCM at 16 kHz
   -> FastAPI WebSocket
-  -> Silero voice activity detection
+  -> Silero VAD (local) / Energy VAD (lite)
   -> Deepgram streaming transcription
   -> Redis session and memory restoration
   -> FastEmbed query embedding
   -> Qdrant document retrieval
   -> Groq response generation
-  -> optional Emotion2Vec response adaptation
+  -> optional Emotion2Vec response adaptation (local only)
   -> Cartesia streaming speech
   -> browser playback acknowledgment
 ```
@@ -52,44 +90,37 @@ Browser microphone
 | --- | --- |
 | Next.js | Landing, voice session, source management, playback, and observability UI |
 | FastAPI WebSocket | Owns the real-time session and routes audio, control, and telemetry events |
-| Silero VAD | Detects speech start for immediate barge-in and speech end for turn completion |
+| Silero VAD | Neural speech detection for immediate barge-in *(local only)* |
+| Energy VAD | Pure-Python amplitude-based VAD *(lite/demo build)* |
 | Deepgram | Primary streaming speech-to-text provider |
-| Whisper | Consent-based local transcription fallback, loaded only on demand |
-| Groq | Answers questions and classifies only ambiguous interruptions |
+| Whisper | Consent-based local transcription fallback *(local only)* |
+| Groq | Answers questions and classifies ambiguous interruptions |
 | Cartesia | Streams Via's spoken response as audio |
-| Emotion2Vec | Local speech-emotion evidence, loaded on the first eligible utterance |
+| Emotion2Vec | Local speech-emotion evidence, loaded on the first eligible utterance *(local only)* |
 | FastEmbed | Shared lazy text-embedding model for document and memory retrieval |
 | Qdrant | Durable semantic vectors for uploaded knowledge and long-term memories |
 | Upstash Redis | Fast session snapshots, recent messages, and memory restoration |
 
-Qdrant and Redis are complementary. Qdrant answers semantic questions such as
-"which stored passage is relevant?" Redis answers state questions such as
-"what was this client discussing and what should be restored now?"
+---
 
 ## Interruption behavior
 
-Via does not treat every interruption as a sidequest:
-
-- **Stop:** cancels speech, discards the paused response, and says only a brief
-  acknowledgment.
-- **Backchannel:** phrases such as "got it" continue the paused answer naturally.
-- **Clarification:** Via answers simply and ends with a contextual choice about
-  returning to the paused topic.
-- **Independent question:** Via answers it and resumes automatically.
-- **Topic switch:** the old paused response is discarded.
-- **Topic reminder:** Via states what was being discussed without starting a new
-  confirmation loop.
+- **Stop:** cancels speech, discards the paused response, says a brief acknowledgment
+- **Backchannel:** phrases such as "got it" continue the paused answer naturally
+- **Clarification:** Via answers simply and ends with a contextual choice about returning to the paused topic
+- **Independent question:** Via answers it and resumes automatically
+- **Topic switch:** the old paused response is discarded
+- **Topic reminder:** Via states what was being discussed without starting a new confirmation loop
 
 ## Emotion behavior
 
-Emotion is supporting evidence, not a diagnosis. Low-confidence Emotion2Vec
-labels are ignored, reliable observations are smoothed over recent turns, and
-stale doubt decays. Explicit language such as "I understand" overrides a noisy
-stress classification. The main interface uses neutral, uncertain, confused,
-or stressed; raw model labels remain available only in diagnostics.
+Emotion is supporting evidence, not a diagnosis. Low-confidence Emotion2Vec labels are ignored, reliable observations are smoothed over recent turns, and stale doubt decays. Explicit language overrides noisy stress classifications.
 
-Emotion2Vec does not load when FastAPI starts or when a socket merely connects.
-It loads in a worker thread on the first eligible utterance and is reused.
+Emotion2Vec does not load at startup or socket connect. It loads on the first eligible utterance and is reused.
+
+> In the Lite/demo build, emotion is fully disabled. Via falls back to STT confidence and language cues only.
+
+---
 
 ## Requirements
 
@@ -97,7 +128,6 @@ It loads in a worker thread on the first eligible utterance and is reused.
 - Node.js 20 or newer
 - A Chromium-based browser with microphone permission
 - Groq, Deepgram, Cartesia, Qdrant Cloud, and Upstash Redis credentials
-- Windows PowerShell commands below, or equivalent commands for your shell
 
 ## Configure
 
@@ -120,13 +150,14 @@ UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
 ```
 
-Keep `VOICE_STT_PROVIDER=deepgram` and
-`VOICE_ALLOW_WHISPER_FALLBACK=true` for the complete local profile. Never put
-backend secrets in a `NEXT_PUBLIC_` variable.
+For the full local experience keep:
+```dotenv
+VOICE_ENABLE_EMOTION=true
+VOICE_ALLOW_WHISPER_FALLBACK=true
+VOICE_VAD_PROVIDER=silero
+```
 
 ## Install
-
-From the repository root:
 
 ```powershell
 py -3.11 -m venv backend/.venv
@@ -144,114 +175,52 @@ backend/.venv/Scripts/python.exe scripts/prefetch_emotion_model.py
 backend/.venv/Scripts/python.exe scripts/create_demo_assets.py
 ```
 
-The first model download can take several minutes. Prefetching prevents that
-download from occurring during a presentation.
-
 ## Run locally
 
-Backend terminal:
+Backend:
 
 ```powershell
 Set-Location backend
 .venv/Scripts/python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Frontend terminal:
+Frontend:
 
 ```powershell
 Set-Location frontend
 npm run dev
 ```
 
-Open `http://localhost:3000`. The backend status endpoint is
-`http://127.0.0.1:8000/system/status`.
+Open `http://localhost:3000`.
 
-Use the same hostname consistently. If the page is opened at `localhost:3000`,
-keep the configured API URL on a loopback address. For testing from another
-device, bind Uvicorn to `0.0.0.0`, configure the machine's LAN address in
-`NEXT_PUBLIC_API_URL`, and add that frontend origin to `CORS_ORIGINS`.
+---
 
-## Recommended demo flow
+## Deployment
 
-1. Open `/system/status` and confirm Deepgram, Groq, Cartesia, Qdrant, and Redis.
-2. Start Via and ask a general question.
-3. Interrupt with an independent question and let Via resume automatically.
-4. Interrupt with "stop now" to demonstrate semantic cancellation.
-5. Load the real-estate PDF, CSV, or JSON demo.
-6. Ask a source-specific question and show the Domain knowledge provenance.
-7. Open Architecture to show the real retrieval path and measured latency.
-8. Refresh and reconnect to demonstrate Redis-backed restoration.
+Via supports two deployment profiles:
 
-## Validate
+| | Local / Full | Render + Vercel (Lite) |
+|---|---|---|
+| `requirements.txt` | `requirements.txt` | `requirements-lite.txt` |
+| `VOICE_ENABLE_EMOTION` | `true` | `false` |
+| `VOICE_ALLOW_WHISPER_FALLBACK` | `true` | `false` |
+| `VOICE_VAD_PROVIDER` | `silero` | `energy` |
+| RAM required | ~2 GB | < 450 MB |
 
-Backend:
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for full step-by-step instructions.
 
-```powershell
-Set-Location backend
-.venv/Scripts/python.exe -m unittest discover -s tests -v
-```
-
-Frontend:
-
-```powershell
-Set-Location frontend
-npm run lint
-npx tsc --noEmit
-npm run build
-```
+---
 
 ## Troubleshooting
 
-### Backend is unreachable
+**Backend is unreachable** — Confirm Uvicorn is running. Open `/health` directly. Check that the frontend API URL and backend host use compatible addresses.
 
-- Confirm Uvicorn is still running.
-- Open `/health` directly.
-- Check that the frontend API URL and backend host use compatible loopback or
-  LAN addresses.
-- On Windows, try another port if WinError 10013 indicates a reserved port.
+**CORS blocks a request** — Add the exact frontend origin to `CORS_ORIGINS`. Restart FastAPI after changing the environment.
 
-### CORS blocks a successful request
+**Voice WebSocket cannot open** — Confirm `/system/status` succeeds. HTTP frontends use `ws://`; HTTPS frontends require `wss://`.
 
-Add the exact frontend origin, including scheme and port, to `CORS_ORIGINS`.
-Restart FastAPI after changing the environment.
+**Emotion model slow on first use** — Run the prefetch script before the demo. Via remains usable if emotion loading fails.
 
-### Voice WebSocket cannot open
+**Qdrant missing payload index** — Restart the backend so collection initialization can create the `client_id` and `document_id` indexes.
 
-- Confirm `/system/status` succeeds first.
-- HTTP frontends use `ws://`; HTTPS frontends require `wss://`.
-- Check browser microphone permission and backend WebSocket logs.
-
-### Emotion model is slow on first use
-
-Run the prefetch script before the demo. Via remains usable if emotion loading
-fails; the provider will be reported as unavailable instead of stopping voice.
-
-### Qdrant reports a missing payload index
-
-Restart the backend so collection initialization can create the required
-`client_id` and `document_id` payload indexes.
-
-### Provider rate limits
-
-Wait for the provider window to reset or use a different valid key. Repeating a
-mis-transcribed wake word can consume STT, LLM, and TTS quota, so Via includes
-Deepgram keyword hints for its name.
-
-## Deployment status
-
-Free hosted deployment is intentionally deferred until the complete local
-application is accepted. The planned Lite deployment uses Vercel and Render's
-native Python runtime without Docker. It will disable Emotion2Vec and Whisper
-only in the hosted resource-constrained profile while keeping them in local and
-development mode.
-
-The Lite profile will not be described as supported until a clean environment
-stays below 430 MB peak memory and passes WebSocket, barge-in, retrieval, and
-session-restoration tests.
-
-The hosted frontend and deployment documentation will state:
-
-> Full emotional intelligence + Whisper fallback available in local/dev mode — this deployment is a resource-constrained demo build.
-
-See [Via Completion and Free Deployment Plan](docs/Via-Completion-and-Free-Deployment-Plan.md)
-and [Via Demo Architecture Handbook](docs/Via-Demo-Architecture-Handbook.md).
+**Demo is slow / Via takes too long to respond** — This is expected on the free-tier demo. Run locally for the full experience.

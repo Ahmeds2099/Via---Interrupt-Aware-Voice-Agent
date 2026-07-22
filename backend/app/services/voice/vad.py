@@ -4,7 +4,7 @@ from collections import deque
 from dataclasses import dataclass
 from time import monotonic
 
-from app.services.voice.silero import SileroEngine
+import os
 
 
 class SpeechStart:
@@ -40,7 +40,13 @@ class VoiceActivityDetector:
 
     def __init__(self):
 
-        self.engine = SileroEngine()
+        provider = os.getenv("VOICE_VAD_PROVIDER", "silero").lower()
+        if provider == "energy":
+            from app.services.voice.energy import EnergyEngine
+            self.engine = EnergyEngine()
+        else:
+            from app.services.voice.silero import SileroEngine
+            self.engine = SileroEngine()
 
         self.frame_buffer = bytearray()
         self.segment_buffer = bytearray()

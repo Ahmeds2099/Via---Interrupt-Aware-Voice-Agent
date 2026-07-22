@@ -55,7 +55,7 @@ class Emotion2VecProvider:
         self.model = None
         self._lock = Lock()
         self._status = "disabled" if not settings.VOICE_ENABLE_EMOTION else "idle"
-        self._message = ""
+        self._message = "not available in this deployment" if not settings.VOICE_ENABLE_EMOTION else ""
 
     @property
     def status(self) -> dict:

@@ -64,6 +64,18 @@ class ConversationManager:
                 }
             )
 
+            if not settings.VOICE_ENABLE_EMOTION and not settings.VOICE_ALLOW_WHISPER_FALLBACK:
+                messages.append(
+                    {
+                        "role": "system",
+                        "content": (
+                            "IMPORTANT: You are running in a constrained demo environment. "
+                            "Keep your responses extremely short. Limit all answers to 1 or 2 brief sentences maximum. "
+                            "This ensures quick processing and allows the user to test barge-in functionality."
+                        )
+                    }
+                )
+
         if (
             emotional_context
             and emotional_context.get("doubt_score", 0)

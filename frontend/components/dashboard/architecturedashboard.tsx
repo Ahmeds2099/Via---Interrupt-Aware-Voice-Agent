@@ -122,8 +122,12 @@ export default function ArchitectureDashboard({
           <div className="section-heading-row"><div><p className="section-label">Dependencies</p><h3 id="providers-title">Provider status</h3></div></div>
           <ul className="provider-list">
             {Object.entries(systemStatus?.providers ?? {}).map(([name, value]) => {
-              const status = providerLabel(value);
-              return <li key={name}><span className="status-dot" data-status={status} /><strong>{name === "emotion" ? "Emotion2Vec+" : name}</strong><span>{status}</span></li>;
+              const rawStatus = providerLabel(value);
+              const isLite = process.env.NEXT_PUBLIC_DEPLOYMENT_PROFILE === "lite";
+              const isHeavyML = name === "emotion" || name === "whisper";
+              const status = isLite && isHeavyML ? "Local/dev only" : rawStatus;
+              
+              return <li key={name}><span className="status-dot" data-status={isLite && isHeavyML ? "idle" : rawStatus} /><strong>{name === "emotion" ? "Emotion2Vec+" : name}</strong><span>{status}</span></li>;
             })}
             {!systemStatus && <li className="muted-row">Connect to load provider health.</li>}
           </ul>
