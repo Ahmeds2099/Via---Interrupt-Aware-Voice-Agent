@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
-export function proxy(request: NextRequest) {
+function proxy(request: NextRequest) {
   if (process.env.NODE_ENV !== "development") {
     return NextResponse.next();
   }
@@ -25,6 +25,8 @@ export function proxy(request: NextRequest) {
 
   return NextResponse.next();
 }
+
+export default proxy;
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
