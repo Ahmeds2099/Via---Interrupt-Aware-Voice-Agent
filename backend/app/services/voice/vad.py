@@ -1,20 +1,29 @@
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass
 from time import monotonic
 
 from app.services.voice.silero import SileroEngine
 
 
+class SpeechStart:
+    """
+    Emitted immediately when VAD detects
+    the beginning of user speech.
+    Used only to interrupt assistant playback.
+    """
+    pass
+
+
 @dataclass
 class SpeechSegment:
-
     audio: bytes
 
 
 class VoiceActivityDetector:
 
-    FRAME_BYTES = 1024                 # 512 samples
+    FRAME_BYTES = 1024
     MAX_SEGMENT_SECONDS = 15
     SAMPLE_RATE = 16000
     SAMPLE_WIDTH = 2
@@ -25,25 +34,31 @@ class VoiceActivityDetector:
         * SAMPLE_WIDTH
     )
 
+    # 250 ms. Short confirmations such as "yes" must reach the
+    # fallback/resume intent classifier.
+    MIN_SEGMENT_BYTES = 8000
+
     def __init__(self):
 
         self.engine = SileroEngine()
 
         self.frame_buffer = bytearray()
-
         self.segment_buffer = bytearray()
 
         self.collecting = False
+        self.start_emitted = False
 
         self.last_voice = monotonic()
+
+        self.events = deque()
 
     def reset(self):
 
         self.frame_buffer.clear()
-
         self.segment_buffer.clear()
 
         self.collecting = False
+        self.start_emitted = False
 
         self.last_voice = monotonic()
 
@@ -52,7 +67,13 @@ class VoiceActivityDetector:
     def update(
         self,
         chunk: bytes,
-    ) -> SpeechSegment | None:
+    ) -> SpeechStart | SpeechSegment | None:
+
+        queued_event = (
+            self.events.popleft()
+            if self.events
+            else None
+        )
 
         self.frame_buffer.extend(chunk)
 
@@ -67,7 +88,7 @@ class VoiceActivityDetector:
             event = self.engine.process(frame)
 
             #
-            # Append audio while speech is active.
+            # Collect audio while speech is active.
             #
             if self.collecting:
 
@@ -82,13 +103,17 @@ class VoiceActivityDetector:
 
                     self.reset()
 
-                    return SpeechSegment(audio)
+                    self.events.append(
+                        SpeechSegment(audio)
+                    )
+
+                    break
 
             if event is None:
                 continue
 
             #
-            # Speech begins.
+            # Speech started.
             #
             if "start" in event:
 
@@ -97,15 +122,22 @@ class VoiceActivityDetector:
                 self.collecting = True
 
                 self.segment_buffer.clear()
-
                 self.segment_buffer.extend(frame)
 
                 self.last_voice = monotonic()
 
+                if not self.start_emitted:
+
+                    self.start_emitted = True
+
+                    self.events.append(
+                        SpeechStart()
+                    )
+
                 continue
 
             #
-            # Speech finished.
+            # Speech ended.
             #
             if "end" in event:
 
@@ -115,11 +147,18 @@ class VoiceActivityDetector:
 
                 self.reset()
 
-                MIN_SEGMENT_BYTES = 32000  # ≈1 second at 16 kHz PCM16
+                if len(audio) >= self.MIN_SEGMENT_BYTES:
 
-                if len(audio) < MIN_SEGMENT_BYTES:
-                    return None
+                    self.events.append(
+                        SpeechSegment(audio)
+                    )
 
-                return SpeechSegment(audio)
+                break
+
+        if queued_event is not None:
+            return queued_event
+
+        if self.events:
+            return self.events.popleft()
 
         return None

@@ -3,10 +3,12 @@
 # ===========================
 
 backend/.venv/
-backend/__pycache__/
-backend/**/*.pyc
+__pycache__/
+*.py[cod]
 backend/.pytest_cache/
 backend/.mypy_cache/
+.ruff_cache/
+.pytype/
 
 # ===========================
 # Environment
@@ -29,6 +31,9 @@ frontend/.env.production
 frontend/node_modules/
 frontend/.next/
 frontend/out/
+frontend/*.tsbuildinfo
+frontend/.vercel/
+.railway/
 
 # ===========================
 # Logs
@@ -63,3 +68,33 @@ build/
 # ===========================
 
 coverage/
+htmlcov/
+.coverage
+
+# ===========================
+# Runtime data and model caches
+# ===========================
+
+backend/uploads/*
+!backend/uploads/.gitkeep
+.cache/
+.huggingface/
+models/
+*.onnx
+*.pt
+*.wav
+
+# ===========================
+# Local project archive
+# ===========================
+
+local-archive/
+Backup/
+*.zip
+architecture-*.json
+architecture-*.pdf
+architecture-*.png
+
+# Local agent tooling
+.agents/
+.codex/

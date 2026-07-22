@@ -1,0 +1,15 @@
+{
+  "development": "Harbor View Residences",
+  "amenities": [
+    "fitness center",
+    "rooftop garden",
+    "visitor parking"
+  ],
+  "policies": {
+    "pets": "Allowed with association registration",
+    "short_term_rentals": "Not permitted"
+  },
+  "contact": {
+    "inspection_hours": "Monday-Saturday, 10 AM-5 PM"
+  }
+}

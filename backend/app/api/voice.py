@@ -14,8 +14,6 @@ connection_manager = VoiceConnectionManager()
 session_manager = VoiceSessionManager()
 dispatcher = VoiceDispatcher()
 
-print("VOICE ROUTER LOADED")
-
 @router.websocket("/ws/voice")
 async def voice_socket(
     websocket: WebSocket,
@@ -36,6 +34,11 @@ async def voice_socket(
     )
 
     try:
+        await dispatcher.start_session(
+            session=session,
+            connection_manager=connection_manager,
+        )
+
         while True:
 
             message = await websocket.receive()
@@ -63,6 +66,8 @@ async def voice_socket(
         pass
 
     finally:
+
+        await dispatcher.close_session(session)
 
         connection_manager.disconnect(
             session.session_id,

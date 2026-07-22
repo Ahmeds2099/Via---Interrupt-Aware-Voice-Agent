@@ -16,12 +16,34 @@ class VoiceDispatcher:
 
     def __init__(self):
 
+        self.audio_handler = AudioHandler()
+
         self._handlers = {
             VoiceMessageType.PING.value: PingHandler(),
-            VoiceMessageType.AUDIO.value: AudioHandler(),
+            VoiceMessageType.AUDIO.value: self.audio_handler,
         }
 
-        self._control_handler = ControlHandler()
+        self._control_handler = ControlHandler(
+            self.audio_handler
+        )
+
+    async def start_session(
+        self,
+        session: VoiceSession,
+        connection_manager: VoiceConnectionManager,
+    ) -> None:
+
+        await self.audio_handler.start_session(
+            session,
+            connection_manager,
+        )
+
+    async def close_session(
+        self,
+        session: VoiceSession,
+    ) -> None:
+
+        await session.close()
 
     async def dispatch(
         self,
@@ -65,4 +87,3 @@ class VoiceDispatcher:
             data=data,
         )
 
-        

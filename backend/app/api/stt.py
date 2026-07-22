@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+import asyncio
 
 from fastapi import APIRouter, File, UploadFile
 
@@ -10,9 +11,6 @@ router = APIRouter(
     prefix="/stt",
     tags=["Speech To Text"],
 )
-
-provider = STTFactory.get_provider()
-
 
 @router.post("/transcribe")
 async def transcribe_audio(
@@ -33,11 +31,13 @@ async def transcribe_audio(
 
         temp_path = temp_file.name
 
-    transcript = provider.transcribe(
-        temp_path,
-    )
-
-    os.remove(temp_path)
+    try:
+        # The legacy file endpoint is another explicit Whisper entry point.
+        # Keep it cold until the endpoint is actually called.
+        provider = await asyncio.to_thread(STTFactory.get_provider)
+        transcript = await asyncio.to_thread(provider.transcribe, temp_path)
+    finally:
+        os.remove(temp_path)
 
     return {
         "transcript": transcript,

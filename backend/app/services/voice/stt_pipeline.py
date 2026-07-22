@@ -1,3 +1,4 @@
+import asyncio
 import os
 import tempfile
 import wave
@@ -47,7 +48,8 @@ class VoiceSTTPipeline:
                 wav.setframerate(self.SAMPLE_RATE)
                 wav.writeframes(audio)
 
-            transcript = self.provider.transcribe(
+            transcript = await asyncio.to_thread(
+                self.provider.transcribe,
                 temp_path,
             )
 

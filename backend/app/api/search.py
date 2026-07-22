@@ -17,7 +17,10 @@ def semantic_search(request: QueryRequest):
 
     vector = embedder.embed_query(request.query)
 
-    results = QdrantService.search(vector)
+    results = QdrantService.search(
+        vector,
+        document_ids=request.document_ids,
+    )
 
     return {
         "query": request.query,

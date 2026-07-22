@@ -1,20 +1,32 @@
 # pyrefly: ignore [missing-import]
-from fastembed import TextEmbedding
+from threading import Lock
 
 
 class EmbeddingService:
 
+    _model = None
+    _lock = Lock()
+
     def __init__(self):
-        self.model = TextEmbedding(
-            model_name="BAAI/bge-small-en-v1.5"
-        )
+        pass
+
+    @classmethod
+    def _get_model(cls):
+        if cls._model is None:
+            with cls._lock:
+                if cls._model is None:
+                    from fastembed import TextEmbedding
+                    cls._model = TextEmbedding(
+                        model_name="BAAI/bge-small-en-v1.5"
+                    )
+        return cls._model
 
     def embed(
         self,
         texts: list[str],
     ) -> list[list[float]]:
 
-        vectors = list(self.model.embed(texts))
+        vectors = list(self._get_model().embed(texts))
 
         return [
             vector.tolist()

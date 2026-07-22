@@ -26,7 +26,10 @@ def stream_answer(request: QueryRequest):
 
     query_vector = embedder.embed_query(request.query)
 
-    chunks = QdrantService.search(query_vector)
+    chunks = QdrantService.search(
+        query_vector,
+        document_ids=request.document_ids,
+    )
 
     prompt = PromptBuilder.build(
         request.query,

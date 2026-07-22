@@ -1,6 +1,3 @@
-# pyrefly: ignore [missing-import]
-from faster_whisper import WhisperModel
-
 from app.services.stt.base import BaseSTTProvider
 
 
@@ -10,6 +7,9 @@ class WhisperProvider(BaseSTTProvider):
         self,
         model_size: str = "base",
     ):
+
+        # Keep the import and model allocation off the normal Deepgram path.
+        from faster_whisper import WhisperModel
 
         self.model = WhisperModel(
             model_size,

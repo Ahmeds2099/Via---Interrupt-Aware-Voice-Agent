@@ -55,6 +55,18 @@ class StreamingTTS:
         token: str,
     ):
 
+        sentence = self.append(token)
+
+        if sentence is None:
+            return
+
+        yield from self.stream_sentence(sentence)
+
+    def append(
+        self,
+        token: str,
+    ) -> str | None:
+
         #
         # Immediate interruption support.
         #
@@ -64,16 +76,23 @@ class StreamingTTS:
 
             self.buffer = ""
 
-            return
+            return None
 
         self.buffer += token
 
         if not self._ready():
-            return
+            return None
 
         sentence = self.buffer
 
         self.buffer = ""
+
+        return sentence
+
+    def stream_sentence(
+        self,
+        sentence: str,
+    ):
 
         for audio in self.provider.stream(sentence):
 
@@ -91,28 +110,29 @@ class StreamingTTS:
 
     def flush(self):
 
+        sentence = self.flush_text()
+
+        if sentence is None:
+            return
+
+        yield from self.stream_sentence(sentence)
+
+    def flush_text(self) -> str | None:
+
         if self.cancelled():
 
             self.buffer = ""
 
-            return
+            return None
 
         if not self.buffer.strip():
-            return
+            return None
 
         sentence = self.buffer
 
         self.buffer = ""
 
-        for audio in self.provider.stream(sentence):
-
-            if self.cancelled():
-
-                self.buffer = ""
-
-                return
-
-            yield audio
+        return sentence
 
     def reset(self):
 

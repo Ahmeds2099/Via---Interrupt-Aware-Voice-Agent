@@ -19,13 +19,19 @@ app = FastAPI(
     version=settings.VERSION,
 )
 
-QdrantService.initialize()
+try:
+    QdrantService.initialize()
+except Exception:
+    # Document retrieval is an enhancement, not a prerequisite for
+    # starting Via in general voice-assistant mode. Runtime health is
+    # reported by /system/status and ingestion returns an actionable 503.
+    pass
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-    ],
+    allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=settings.CORS_ORIGIN_REGEX,
+    allow_private_network=(settings.ENVIRONMENT == "development"),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
