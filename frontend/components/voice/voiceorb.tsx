@@ -3,6 +3,7 @@ import type { VoiceState } from "@/lib/voice/types";
 const STATE_COPY: Record<VoiceState, { label: string; detail: string }> = {
   idle: { label: "Ready", detail: "Start listening when you are ready." },
   connecting: { label: "Connecting", detail: "Opening Via's real-time voice channel." },
+  waking_up: { label: "Waking up…", detail: "The server is starting up. This can take up to 60 seconds on the free tier." },
   listening: { label: "Listening", detail: "Speak naturally. You can interrupt Via at any time." },
   thinking: { label: "Thinking", detail: "Retrieving context and preparing a response." },
   speaking: { label: "Speaking", detail: "Via is responding. Start speaking to barge in." },
