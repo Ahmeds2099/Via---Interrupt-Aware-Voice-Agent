@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from uuid import uuid4
 
+# pyrefly: ignore [missing-import]
 from qdrant_client.models import (
     Distance,
     FieldCondition,

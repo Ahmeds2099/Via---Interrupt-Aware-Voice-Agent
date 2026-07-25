@@ -1,4 +1,6 @@
-property_id,address,bedrooms,price,status
-HV-A204,Harbor View A-204,2,425000,Available
-HV-B110,Harbor View B-110,1,315000,Reserved
-GV-C302,Green Valley C-302,3,610000,Available
+property_id,address,bedrooms,bathrooms,sqft,price,status,hoa_monthly
+HV-A204,Harbor View A-204,2,2,1180,425000,Available,310
+HV-B110,Harbor View B-110,1,1,750,315000,Reserved,240
+GV-C302,Green Valley C-302,3,2.5,1850,610000,Available,450
+OC-PH01,Ocean Crest Penthouse 01,4,3.5,2900,1250000,Available,820
+SP-D105,Sunset Park D-105,2,1.5,1020,380000,Pending,290

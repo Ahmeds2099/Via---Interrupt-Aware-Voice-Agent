@@ -180,18 +180,19 @@ export function useVoice() {
         setVoiceError("");
         setConnecting(true);
         setVoiceState("connecting");
-        
+        setRestoredState("New session");
+
         let backendReady = false;
         let attempts = 0;
         const maxAttempts = 7;
-        
+
         while (attempts < maxAttempts) {
             backendReady = await checkSystem();
             if (backendReady) break;
-            
+
             attempts++;
             if (attempts >= maxAttempts) break;
-            
+
             setVoiceState("waking_up");
             // Exponential backoff: 2s, 3s, 4.5s, 6.7s, 10s, 15s (cap)
             const backoff = Math.min(2000 * Math.pow(1.5, attempts - 1), 15000);
@@ -279,28 +280,32 @@ export function useVoice() {
         socket.onTranscript = (text) => {
             setTranscript(text);
             setInterimTranscript("");
-            setConversation((turns) => [
-                ...turns,
-                {
-                    id: createClientId(),
-                    role: "user",
-                    text,
-                    createdAt: Date.now(),
-                },
-            ]);
+            setConversation((turns) => {
+                // Remove any dangling/empty assistant turns before appending new user turn
+                const cleaned = turns.filter((turn) => !(turn.role === "assistant" && !turn.text));
+                return [
+                    ...cleaned,
+                    {
+                        id: createClientId(),
+                        role: "user",
+                        text,
+                        createdAt: Date.now(),
+                    },
+                ];
+            });
             setPipelineStages((stages) => mergePipelineStage(stages, {
-                    stage: "stt",
-                    status: "complete",
-                    updatedAt: Date.now(),
+                stage: "stt",
+                status: "complete",
+                updatedAt: Date.now(),
             }));
         };
 
         socket.onInterimTranscript = (text) => {
             setInterimTranscript(text);
             setPipelineStages((stages) => mergePipelineStage(stages, {
-                    stage: "stt",
-                    status: "active",
-                    updatedAt: Date.now(),
+                stage: "stt",
+                status: "active",
+                updatedAt: Date.now(),
             }));
         };
 
@@ -481,10 +486,10 @@ export function useVoice() {
                     : turn,
             ));
             setPipelineStages((stages) => mergePipelineStage(stages, {
-                    responseId: context.responseId,
-                    stage: "memory",
-                    status: context.memoryCount ? "complete" : "skipped",
-                    updatedAt: Date.now(),
+                responseId: context.responseId,
+                stage: "memory",
+                status: context.memoryCount ? "complete" : "skipped",
+                updatedAt: Date.now(),
             }));
         };
         socket.onTurnMetrics = (metrics) => {
@@ -498,15 +503,17 @@ export function useVoice() {
             emotionRef.current = update;
             setEmotion(update);
             setPipelineStages((stages) => mergePipelineStage(stages, {
-                    stage: "emotion",
-                    status: update.label ? "complete" : update.status,
-                    updatedAt: Date.now(),
+                stage: "emotion",
+                status: update.label ? "complete" : update.status,
+                updatedAt: Date.now(),
             }));
         };
         socket.onSessionRestored = (messageCount, memoryCount) => {
-            setRestoredState(
-                `Restored ${messageCount} messages and ${memoryCount} memories`,
-            );
+            if (messageCount > 0) {
+                setRestoredState(`Restored ${messageCount} messages and ${memoryCount} memories`);
+            } else {
+                setRestoredState("New session");
+            }
         };
 
         setSTTProvider("initializing");
@@ -552,9 +559,9 @@ export function useVoice() {
             setListening(true);
             setVoiceState("listening");
             setPipelineStages((stages) => mergePipelineStage(stages, {
-                    stage: "microphone",
-                    status: "active",
-                    updatedAt: Date.now(),
+                stage: "microphone",
+                status: "active",
+                updatedAt: Date.now(),
             }));
         } catch (error) {
             recorderRef.current = null;
@@ -573,9 +580,9 @@ export function useVoice() {
         setListening(false);
         setVoiceState("idle");
         setPipelineStages((stages) => mergePipelineStage(stages, {
-                stage: "microphone",
-                status: "idle",
-                updatedAt: Date.now(),
+            stage: "microphone",
+            status: "idle",
+            updatedAt: Date.now(),
         }));
     }, []);
 
@@ -646,10 +653,36 @@ export function useVoice() {
     const dismissUploadError = useCallback(() => setUploadError(""), []);
 
     useEffect(() => {
+        const fallbackDemos: DemoDocument[] = [
+            {
+                title: "Real estate advisor",
+                description: "Property listings & market guide (PDF)",
+                format: "PDF",
+                slug: "real-estate-brief",
+            },
+            {
+                title: "Property listings analyst",
+                description: "Sales & valuation table (CSV)",
+                format: "CSV",
+                slug: "property-listings",
+            },
+            {
+                title: "Development specialist",
+                description: "Zoning & project details (JSON)",
+                format: "JSON",
+                slug: "development-details",
+            },
+        ];
         fetch(`${apiBase}/upload/demos`)
             .then((response) => response.ok ? response.json() : Promise.reject())
-            .then((payload) => setDemoDocuments(payload.documents ?? []))
-            .catch(() => setDemoDocuments([]));
+            .then((payload) => {
+                if (payload.documents && payload.documents.length > 0) {
+                    setDemoDocuments(payload.documents);
+                } else {
+                    setDemoDocuments(fallbackDemos);
+                }
+            })
+            .catch(() => setDemoDocuments(fallbackDemos));
     }, [apiBase]);
 
     useEffect(() => {
