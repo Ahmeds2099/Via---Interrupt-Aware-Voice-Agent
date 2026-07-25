@@ -154,7 +154,7 @@ export default function HomePage() {
       <header className="site-header">
         <button className="brand" type="button" onClick={() => setEntered(false)} aria-label="Via home">
           <span className="brand-mark">V</span>
-          <span><strong>Via</strong><small>Adaptive voice intelligence</small></span>
+          <span><strong>Via</strong><small>Voice interruption agent</small></span>
         </button>
 
         {entered ? (
@@ -188,7 +188,7 @@ export default function HomePage() {
       {!entered ? (
         <div id="main-content" className="landing-view">
           <section className="hero-copy">
-            <p className="section-label">Adaptive voice intelligence</p>
+            <p className="section-label">Voice interruption agent</p>
             <h1>Speak naturally.<br /><span>Via keeps the thread.</span></h1>
             <p className="hero-lede">
               A voice mentor that listens in real time, adapts to how you feel, remembers what matters, and can become an expert in any document you choose.

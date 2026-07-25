@@ -36,7 +36,8 @@ class PromptBuilder:
             evidence_instruction = (
                 "No sufficiently relevant uploaded evidence was retrieved. "
                 "Do not adopt a document-specific professional role. For a "
-                "low-risk educational question, clearly label general knowledge. "
+                "low-risk educational question, answer naturally from general knowledge "
+                "using varied conversational phrasing (avoid repeating 'from my general knowledge' verbatim). "
                 "For unsupported high-risk guidance, say the uploaded material "
                 "does not contain the requested information."
             )

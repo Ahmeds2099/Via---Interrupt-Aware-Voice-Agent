@@ -1,15 +1,28 @@
 {
-  "development": "Harbor View Residences",
+  "development": "Harbor View Residences & Mixed-Use Complex",
+  "developer": "Apex Urban Developments",
+  "completion_year": 2025,
+  "zoning": "R4-Multi-Family High Density",
+  "total_units": 120,
   "amenities": [
-    "fitness center",
-    "rooftop garden",
-    "visitor parking"
+    "fitness center and yoga studio",
+    "rooftop terrace & community garden",
+    "visitor parking with EV charging stations",
+    "24/7 concierge and secure bike storage",
+    "coworking lounge with private pods"
   ],
   "policies": {
-    "pets": "Allowed with association registration",
-    "short_term_rentals": "Not permitted"
+    "pets": "Allowed (max 2 pets per unit under 50 lbs) with association registration",
+    "short_term_rentals": "Not permitted (minimum 6-month lease terms)",
+    "parking": "1 assigned underground spot included per unit; extra spots $150/month"
+  },
+  "financials": {
+    "association_fee_range": "$240 - $820 monthly",
+    "utilities_included": ["Water", "Trash removal", "Common area maintenance"]
   },
   "contact": {
-    "inspection_hours": "Monday-Saturday, 10 AM-5 PM"
+    "leasing_office": "Sales Suite 101",
+    "inspection_hours": "Monday-Saturday, 10 AM-5 PM",
+    "email": "inquiries@harborviewresidences.com"
   }
 }

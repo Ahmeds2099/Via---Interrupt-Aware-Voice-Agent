@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Via | Adaptive Voice Intelligence",
+  title: "Via | Voice Interruption Agent",
   description: "An interruptible, emotionally adaptive, document-grounded universal voice agent.",
 };
 
