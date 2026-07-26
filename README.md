@@ -8,9 +8,9 @@ Via can work as a general assistant without a document. Uploading a PDF, CSV, or
 
 ## 🔴 Live Demo
 
-> **[→ Try the Live Demo]([#](https://via-interrupt-aware-voice-agent.vercel.app/))** 
+> **[→ Try the Live Demo](https://via-interrupt-aware-voice-agent.vercel.app/)** 
 
-> **[→ Watch the Demo Video]([#](https://youtu.be/h0yHkQZ0gUA))**
+> **[→ Watch the Demo Video](https://youtu.be/h0yHkQZ0gUA)**
 
 ---
 
