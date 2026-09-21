@@ -659,18 +659,21 @@ export function useVoice() {
                 description: "Property listings & market guide (PDF)",
                 format: "PDF",
                 slug: "real-estate-brief",
+                filename: "real-estate-brief.pdf"
             },
             {
                 title: "Property listings analyst",
                 description: "Sales & valuation table (CSV)",
                 format: "CSV",
                 slug: "property-listings",
+                filename: "property-listings.csv"
             },
             {
                 title: "Development specialist",
                 description: "Zoning & project details (JSON)",
                 format: "JSON",
                 slug: "development-details",
+                filename: "development-details.json"
             },
         ];
         fetch(`${apiBase}/upload/demos`)
