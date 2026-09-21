@@ -20,7 +20,7 @@ class LLMService:
     ) -> str:
 
         response = self.client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             temperature=0.2,
             messages=messages,
         )
@@ -34,7 +34,7 @@ class LLMService:
     ):
 
         request = {
-            "model": "llama-3.3-70b-versatile",
+            "model": "openai/gpt-oss-120b",
             "temperature": 0.2,
             "messages": messages,
             "stream": True,
@@ -57,7 +57,7 @@ class LLMService:
     def classify_interruption(self, transcript: str) -> dict | None:
         """Return a small JSON interruption decision for ambiguous turns."""
         response = self.client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-20b",
             temperature=0,
             max_tokens=80,
             response_format={"type": "json_object"},
